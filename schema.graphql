@@ -30,4 +30,12 @@ type Transfer @entity {
   from: Bytes! # address
   to: Bytes! # address
   tokenId: BigInt! # uint256
+  image: String!
+  personality: String
+  characteristics: String
+  catOrDogPerson: String
+  relationshipStatus: String
+  idealVacation: String
+  artisticVocation: String
+  workStyle: String
 }

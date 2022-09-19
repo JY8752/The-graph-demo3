@@ -12,6 +12,7 @@ import {
   OwnershipTransferred,
   Transfer
 } from "../generated/schema"
+import { ipfs, json } from "@graphprotocol/graph-ts"
 
 export function handleApproval(event: ApprovalEvent): void {
   let entity = new Approval(
@@ -63,5 +64,46 @@ export function handleTransfer(event: TransferEvent): void {
   entity.from = event.params.from
   entity.to = event.params.to
   entity.tokenId = event.params.tokenId
+
+  const metadataHash = "bafybeifxtaxrlfoszvqhioobomo454imsyo3udputxyxikbrg5cesp7qte"
+  const metadata = ipfs.cat(`${metadataHash}/${event.params.tokenId.toString()}.json`)
+  if(metadata) {
+    const metadataJson = json.fromBytes(metadata).toObject()
+
+    const image = metadataJson.get("image")
+    if(image) {
+      entity.image = image.toString()
+    }
+
+    const attributes = metadataJson.get("attributes")
+    if(attributes) {
+      const attributesArray = attributes.toArray()
+      for(let i = 0; i < attributesArray.length; i++) {
+        const item = attributesArray[i].toObject()
+        const traitType = item.get("trait_type")
+        const value = item.get("value")
+        if(traitType && value) {
+          if(traitType.toString() == "Personality") {
+            entity.personality = value.toString()
+          } else if(traitType.toString() == "Characteristics") {
+            entity.characteristics = value.toString()
+          } else if(traitType.toString() == "Cat or Dog Person") {
+            entity.catOrDogPerson = value.toString()
+          } else if(traitType.toString() == "Relationship Status") {
+            entity.relationshipStatus = value.toString()
+          } else if(traitType.toString() == "Ideal Vacation") {
+            entity.idealVacation = value.toString()
+          } else if(traitType.toString() == "Artistic Vocation") {
+            entity.artisticVocation = value.toString()
+          } else if(traitType.toString() == "Work Style") {
+            entity.workStyle = value.toString()
+          } else {
+            //nop
+          }
+        }
+      }
+    }
+  }
+
   entity.save()
 }
